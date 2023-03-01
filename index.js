@@ -1,14 +1,21 @@
 const puppeteer = require('puppeteer');
 const json2xls = require('json2xls');
 const fs = require('fs');
+const path = require('path');
 const chromePaths = require('chrome-paths')
 const chalk = require('chalk');
 
+require('dotenv').config({path: path.join(process.cwd(), '.env')})
+
+const headless = process.env.HEADLESS == 'true' || process.env.HEADLESS == '1';
+const DEFAULT_TIMEOUT = parseInt(process.env.DEFAULT_TIMEOUT || '2000');
+
 const getAllAnnonces = async () => {
     let responses = [], index = 0;
+    var i = 0;
 
     const browser = await puppeteer.launch({
-        headless: true,
+        headless,
         defaultViewport: null,
         executablePath: chromePaths.chrome,
         userDataDir : './profile',
@@ -17,6 +24,14 @@ const getAllAnnonces = async () => {
         ],
         "ignoreDefaultArgs": ["--enable-automation"]
     });
+
+    var counter = setInterval(() => {
+        process.stdout.clearLine();
+        process.stdout.cursorTo(0);
+        i = (i + 1) % 4;
+        var dots = new Array(i + 1).join(".");
+        process.stdout.write("Lancement de scraping " + dots);
+    }, 1000);
 
     try {  
         ids = fs.readFileSync('log.txt', 'utf8');
@@ -31,12 +46,13 @@ const getAllAnnonces = async () => {
     }
 
     try {
-        responses = require('./data.json')
+        responses = require(path.join(process.cwd(), 'data.json'))
     } catch (error) {
         
     }
 
-    const DEFAULT_TIMEOUT = 2000;
+        //console.log(responses.length);
+    
     // const init_page = await browser.newPage();
 
     // await init_page.setDefaultTimeout(0)
@@ -86,6 +102,7 @@ const getAllAnnonces = async () => {
         'https://www.vroomly.com/garage-pessac/'
       ]
 
+    // clearInterval(counter);
     for (let i = init_city; i < cities.length; i++) {
         const page = await browser.newPage();
         await page.setDefaultTimeout(0)
@@ -97,10 +114,16 @@ const getAllAnnonces = async () => {
             
             do {
                 try {
+                    
                     if(nbr_page == 1)
                         await page.goto(cities[i], {waitUntil: "networkidle2"})
                     else 
                         await page.goto(cities[i]+'?page='+nbr_page, {waitUntil: "networkidle2"})
+
+                    if(index == 0){
+                        clearInterval(counter)
+                        index++
+                    }
 
                     process.stdout.clearLine();
                     process.stdout.cursorTo(0);
@@ -108,6 +131,14 @@ const getAllAnnonces = async () => {
 
                 } catch (error) {
                     break
+                }
+
+                
+                try {
+                    await page.waitForXPath('//button[contains(text(), "Accepter")]', { hidden: true, timeout: 5000 });
+                } catch (error) {
+                    const elements = await page.$x('//button[contains(text(), "Accepter")]')
+                    await elements[0].click() 
                 }
 
                 try {

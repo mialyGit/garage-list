@@ -2,7 +2,10 @@
   "name": "garage-list",
   "version": "1.0.0",
   "description": "juste un petit test",
-  "main": "app.js",
+  "main": "index.js",
+  "bin": {
+    "garage-list": "./index.js"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -11,7 +14,15 @@
   "dependencies": {
     "chalk": "^4.1.2",
     "chrome-paths": "^1.0.1",
+    "dotenv": "^10.0.0",
     "json2xls": "^0.1.2",
     "puppeteer": "^13.4.1"
+  },
+  "pkg": {
+    "targets": [
+      "node14-win-x86",
+      "node14-win-x64",
+      "node14-macos-x64"
+    ]
   }
 }

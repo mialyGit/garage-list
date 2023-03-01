@@ -1,6 +1,9 @@
+./profile
 ./node_modules
 node_modules
-images
-pic
 profile
-oncle-bot.exe
+garage-list-macos-x64
+garage-list-win-x64.exe
+garage-list-win-x86.exe
+data.json
+log.txt
